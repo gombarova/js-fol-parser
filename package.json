@@ -1,0 +1,42 @@
+{
+  "name": "js-fol-parser",
+  "version": "0.1.0",
+  "description": "A JavaScript parser for first-order logic languages",
+  "files": [
+    "dist/**"
+  ],
+  "main": "dist/index.js",
+  "author": {
+    "name": "Milan Cifra"
+  },
+  "contributors": [
+    {
+      "name": "Ján Kľuka",
+      "email": "jan.kluka@fmph.uniba.sk"
+    }
+  ],
+  "maintainers": [
+    {
+      "name": "Ján Kľuka",
+      "email": "jan.kluka@fmph.uniba.sk"
+    }
+  ],
+  "license": "ISC",
+  "scripts": {
+    "build:parser": "node scripts/build-parser.js",
+    "build:module": "npx kcd-scripts build --ignore '**/__tests__/**,**/__mocks__/**,**/*.pegjs'",
+    "build": "npm run build:parser && npm run build:module",
+    "test": "npx kcd-scripts test"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.6.4",
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "cross-spawn": "^7.0.0",
+    "kcd-scripts": "^1.11.0",
+    "pegjs": "^0.10.0"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.6.3"
+  }
+}

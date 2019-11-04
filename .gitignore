@@ -1,0 +1,7 @@
+/dist
+
+# Build output
+/node_modules
+
+# Generated files
+/src/parser/index.js
