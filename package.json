@@ -26,6 +26,7 @@
     "build:parser": "node scripts/build-parser.js",
     "build:module": "npx kcd-scripts build --ignore '**/__tests__/**,**/__mocks__/**,**/*.pegjs'",
     "build": "npm run build:parser && npm run build:module",
+    "lint": "npx kcd-scripts lint",
     "test": "npx kcd-scripts test"
   },
   "devDependencies": {
