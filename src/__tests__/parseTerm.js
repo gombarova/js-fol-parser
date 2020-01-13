@@ -12,7 +12,7 @@ describe('term parsing', () => {
       expect(parse(v)).toBe(`v:${v}`)
     });
 
-  test.each(constants)('constant %s', (c) => {
+  test.each(Array.from(constants))('constant %s', (c) => {
     expect(parse(c)).toBe(`c:${c}`)
   })
 

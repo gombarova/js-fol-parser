@@ -1,4 +1,4 @@
-export const constants = ['c', 'aConstant', '1']
+export const constants = new Set(['c', 'aConstant', '1'])
 
 const _functions = new Map(Object.entries({
   'f': 1,
@@ -6,7 +6,7 @@ const _functions = new Map(Object.entries({
   'aFunction': 4
 }))
 
-export const functions = [..._functions.keys()]
+export const functions = new Set(_functions.keys())
 
 const _predicates = new Map(Object.entries({
   'p': 1,
@@ -14,14 +14,14 @@ const _predicates = new Map(Object.entries({
   'aPredicate': 5
 }))
 
-export const predicates = [..._predicates.keys()]
+export const predicates = new Set(_predicates.keys())
 
 const symbolsWithArity =
   new Map([..._functions].concat([..._predicates]))
 
-const isConstant = i => constants.includes(i)
-const isFunction = i => functions.includes(i)
-const isPredicate = i => predicates.includes(i)
+const isConstant = i => constants.has(i)
+const isFunction = i => functions.has(i)
+const isPredicate = i => predicates.has(i)
 const isVariable = i =>
   !(isConstant(i) || isFunction(i) || isPredicate(i))
 export const arity = s => symbolsWithArity.get(s)
