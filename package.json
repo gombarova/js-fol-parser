@@ -1,7 +1,8 @@
 {
-  "name": "js-fol-parser",
+  "name": "@fmfi-uk-1-ain-412/js-fol-parser",
   "version": "0.1.0",
   "description": "A JavaScript parser for first-order logic languages",
+  "repository": "https://github.com/FMFI-UK-1-AIN-412/js-fol-parser",
   "files": [
     "dist/**"
   ],
@@ -35,7 +36,7 @@
     "@babel/preset-env": "^7.6.3",
     "cross-spawn": "^7.0.0",
     "jest-chance": "^0.1.8",
-    "kcd-scripts": "^1.11.0",
+    "kcd-scripts": "^1.14.0",
     "pegjs": "^0.10.0"
   },
   "dependencies": {
