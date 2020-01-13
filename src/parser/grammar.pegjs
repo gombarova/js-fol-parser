@@ -8,6 +8,7 @@
 {
     /* eslint-disable */
     const { startRule, language, factories } = options;
+    const ee = { expected, error };
 }
 
 
@@ -22,11 +23,11 @@ Term
 TermCases
     "term"
     = f:FunctionSymbol WS "(" ts:Terms ")"
-        { return factories.functionApplication(f, ts, expected, error) }
+        { return factories.functionApplication(f, ts, ee) }
     / c:ConstantSymbol
-        { return factories.constant(c, expected, error) }
+        { return factories.constant(c, ee) }
     / v:VariableSymbol
-        { return factories.variable(v, expected, error) }
+        { return factories.variable(v, ee) }
 
 Terms
     "comma-separated sequence of one or more terms"
@@ -34,16 +35,26 @@ Terms
         { return [t1].concat(ts) }
 
 
-// ### Atoms
+// ### Quasi Atoms
 
-Atom =
-    "equality or predicate atom"
-    / t1:Term EqualitySymbol t2:Term
-        { return factories.equalityAtom(t1, t2, expected, error) }
+QuasiAtom
+    = t1:Term eqNeq:EqNeqSymbol t2:Term
+        { return eqNeq(t1, t2, ee) }
     / p:PredicateSymbol WS "("  ts:Terms ")"
-        { return factories.predicateAtom(p, ts, expected, error) }
+        { return factories.predicateAtom(p, ts, ee) }
     / p:PredicateSymbol
-        { return factories.predicateAtom(p, [], expected, error) }
+        { return factories.predicateAtom(p, [], ee) }
+
+EqNeqSymbol
+    = EqualitySymbol
+        { return factories.equalityAtom }
+    / NonEqualitySymbol
+        {
+            return (t1, t2, ee) =>
+                factories.negation(
+                    factories.equalityAtom(t1, t2, ee),
+                    ee)
+        }
 
 
 // ### Formulas – strictly binary and fully parenthesized
@@ -54,18 +65,14 @@ FormulaStrict
 
 FormulaStrictCases
     = "(" left:FormulaStrict c:BinaryConnective right:FormulaStrict ")"
-        { return c(left, right, expected, error) }
+        { return c(left, right, ee) }
     / ExistsSymbol WS v:VariableSymbol f:FormulaStrict
-        { return factories.existentialQuant(v, f, expected, error) }
+        { return factories.existentialQuant(v, f, ee) }
     / ForallSymbol WS v:VariableSymbol f:FormulaStrict
-        { return factories.universalQuant(v, f, expected, error) }
+        { return factories.universalQuant(v, f, ee) }
     / NegationSymbol f:FormulaStrict
-        { return factories.negation(f, expected, error) }
-    / t1:Term NonEqualitySymbol t2:Term
-        { return factories.negation(
-            factories.equalityAtom(t1, t2, expected, error),
-            expected, error) }
-    / f:Atom
+        { return factories.negation(f, ee) }
+    / f:QuasiAtom
         { return f }
     / "(" f:FormulaStrict ")"
         { return f }
