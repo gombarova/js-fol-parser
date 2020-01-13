@@ -108,88 +108,67 @@ EqualitySymbol
     = "="
 
 ConjunctionSymbol
-    "conjunction symbol (one of ∧, &, &&, /\\, \\land, \\wedge)"
+    "conjunction symbol"
     = "∧"
+    / "&&" // must come before &
     / "&"
-    / "&&"
     / "/\\"
-    / "\\land" RequiredWS
-    / "\\wedge" RequiredWS
+    / "\\land" ! IdentifierPart
+    / "\\wedge" ! IdentifierPart
 
 DisjunctionSymbol
-    "disjunction symbol (one of ∨, |, ||, \\/, \\lor, \\vee)"
+    "disjunction symbol"
     = "∨"
+    / "||" // must come before |
     / "|"
-    / "||"
     / "\\/"
-    / "\\lor" RequiredWS
-    / "\\vee" RequiredWS
+    / "\\lor" ! IdentifierPart
+    / "\\vee" ! IdentifierPart
 
 ImplicationSymbol
-    "implication symbol (one of →, ⟶, ⇒, ⟹, ⊃, ->, -->, =>, ==>, \\limpl, \\implies, \\to, \\rightarrow)"
-    = "→"
-    / "⇒"
-    / "⟶"
-    / "⟹"
-    / "->"
-    / "=>"
-    / "-->"
-    / "==>"
-    / "⊃"
-    / "\\limpl" RequiredWS
-    / "\\implies" RequiredWS
-    / "\\rightarrow" RequiredWS
-    / "\\to" RequiredWS
+    "implication symbol"
+    = "→" / "⇒" / "⟶" / "⟹" / "⊃"
+    / "->" / "=>" / "-->" / "==>"
+    / "\\limpl" ! IdentifierPart
+    / "\\implies" ! IdentifierPart
+    / "\\rightarrow" ! IdentifierPart
+    / "\\to" ! IdentifierPart
 
 EquivalenceSymbol
-    "equivalence symbol (one of ↔︎, ⟷, ⇔, ⟺, ≡, <->, <-->, <=>, <==>, \\lequiv, \\leftrightarrow)"
-    = "↔︎"
-    / "⇔"
-    / "<->"
-    / "<=>"
-    / "\\lequiv" RequiredWS
-    / "\\equivalent" RequiredWS
-    / "\\equiv" RequiredWS
-    / "\\leftrightarrow" RequiredWS
-    / "⟷"
-    / "<-->"
-    / "⟺"
-    / "<==>"
-    / "≡"
+    "equivalence symbol"
+    = "↔︎" / "⟷" / "⇔" / "⟺" / "≡"
+    / "<->" / "<-->" / "<=>" / "<==>" / "==="
+    / "\\lequiv" ! IdentifierPart
+    / "\\leftrightarrow" ! IdentifierPart
+    / "\\equivalent" ! IdentifierPart
+    / "\\equiv" ! IdentifierPart
 
 ExistsSymbol
-    "existential quantifier (one of ∃, \\exists, \\ex, \\e, \\E)"
+    "existential quantifier"
     = "∃"
-    / "\\exists" RequiredWS
-    / "\\ex" RequiredWS
-    / "\\e" RequiredWS
-    / "\\E" RequiredWS
+    / "\\e" ( "x" "ists"? )? ! IdentifierPart
+    / "\\E" ! IdentifierPart
 
 ForallSymbol
-    "universal quantifier (one of ∀, !, \\forall, \\all, \\a, \\A)"
+    "universal quantifier"
     = "∀"
-    / "\\forall" RequiredWS
-    / "\\all" RequiredWS
-    / "\\a" RequiredWS
-    / "\\A" RequiredWS
+    / "\\forall" ! IdentifierPart
+    / "\\all" ! IdentifierPart
+    / "\\a" ! IdentifierPart
+    / "\\A" ! IdentifierPart
 
 NegationSymbol
-    "negation symbol (one of ¬, -, !, ~, ∼, \\lnot, \\neg)"
+    "negation symbol"
     = "¬"
-    / "-"
-    / "!"
-    / "~"
-    / "∼"
-    / "\\neg" RequiredWS
-    / "\\lnot" RequiredWS
+    / "-" / "!" / "~"
+    / "\\neg" ! IdentifierPart
+    / "\\lnot" ! IdentifierPart
 
 NonEqualitySymbol
-    "non-equality symbol (one of ≠, !=, <>, /=, \\neq)"
+    "non-equality symbol"
     = "≠"
-    / "!="
-    / "<>"
-    / "/="
-    / "\\neq"
+    / "!=" / "<>" / "/="
+    / "\\neq" ! IdentifierPart
 
 
 // ## LANGUAGE SPECIFICATION
