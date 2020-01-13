@@ -1,6 +1,6 @@
 import { arity } from './language'
 
-const applicationWithArityCheck = (sym, args, expected, _error) => {
+const applicationWithArityCheck = (sym, args, { expected }) => {
   const a = arity(sym);
   if (args.length !== a) {
     expected(`${a} argument${(a == 1 ? '' : 's')} to ${sym}`);
@@ -9,7 +9,16 @@ const applicationWithArityCheck = (sym, args, expected, _error) => {
 }
 
 export default {
-  variable: (v, _expected, _error) => `v:${v}`,
-  constant: (c, _expected, _error) => `c:${c}`,
+  variable: (v, _) => `v:${v}`,
+  constant: (c, _) => `c:${c}`,
   functionApplication: applicationWithArityCheck,
+  predicateAtom: applicationWithArityCheck,
+  equalityAtom: (lhs, rhs, _) => `${lhs}=${rhs}`,
+  negation: (f, _) => `¬${f}`,
+  conjunction: (lhs, rhs, _) => `(${lhs}∧${rhs})`,
+  disjunction: (lhs, rhs, _) => `(${lhs}∨${rhs})`,
+  implication: (lhs, rhs, _) => `(${lhs}→${rhs})`,
+  equivalence: (lhs, rhs, _) => `(${lhs}↔︎${rhs})`,
+  existentialQuant: (v, f, _) => `∃${v} ${f}`,
+  universalQuant: (v, f, _) => `∀${v} ${f}`,
 }
