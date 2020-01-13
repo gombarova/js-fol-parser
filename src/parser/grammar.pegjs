@@ -1,9 +1,20 @@
+// Grammars of a few variations of first-order languages
+// and textual specifications of languages and structures
+//
+// Authors: Milan Cifra, Ján Kľuka
+// Unicode class and JavaScript identifier parsing rules taken from
+// https://github.com/pegjs/pegjs/blob/master/examples/javascript.pegjs
+
 {
     /* eslint-disable */
     const { startRule, language, factories } = options;
 }
 
-// TERMS
+
+// ## FIRST-ORDER SYNTAX OVER AN A-PRIORI LANGUAGE
+
+
+// ### Terms
 
 Term
     = WS t:TermCases WS { return t }
@@ -17,23 +28,13 @@ TermCases
     / v:VariableSymbol
         { return factories.variable(v, expected, error) }
 
-ConstantSymbol
-    "individual constant symbol"
-    = $ (i:ConstantIdentifier & { return language.isConstant(i) })
-
-FunctionSymbol
-    "function symbol"
-    = $ (i:Identifier & { return language.isFunction(i) })
-
-VariableSymbol
-    "variable symbol"
-    = $ (i:Identifier & { return language.isVariable(i) })
-
 Terms
-    = t:Term ts:("," t1:Term { return t1 })*
-        { return [t].concat(ts) }
+    "comma-separated sequence of one or more terms"
+    = t1:Term ts:("," ti:Term { return ti })*
+        { return [t1].concat(ts) }
 
-// ATOMS
+
+// ### Atoms
 
 Atom =
     "equality or predicate atom"
@@ -44,32 +45,19 @@ Atom =
     / p:PredicateSymbol
         { return factories.predicateAtom(p, [], expected, error) }
 
-PredicateSymbol
-    "predicate symbol"
-    = $ (i:Identifier & { return language.isPredicate(i) })
 
-EqualitySymbol
-    "equality symbol (=)"
-    = "="
-
-// STRICTLY BINARY, FULLY PARENTHESIZED FORMULAS
+// ### Formulas – strictly binary and fully parenthesized
 
 FormulaStrict
+    "formula"
     = WS f:FormulaStrictCases WS { return f }
 
 FormulaStrictCases
-    "formula"
-    = "(" left:FormulaStrict ConjunctionSymbol WS right:FormulaStrict ")"
-        { return factories.conjunction(left, right, expected, error) }
-    / "(" left:FormulaStrict WS DisjunctionSymbol WS right:FormulaStrict ")"
-        { return factories.disjunction(left, right, expected, error) }
-    / "(" left:FormulaStrict WS ImplicationSymbol WS right:FormulaStrict ")"
-        { return factories.implication(left, right, expected, error) }
-    / "(" left:FormulaStrict WS EquivalenceSymbol WS right:FormulaStrict ")"
-        { return factories.equivalence(left, right, expected, error) }
-    / ExistsSymbol WS v:VariableSymbol WS f:FormulaStrict
+    = "(" left:FormulaStrict c:BinaryConnective right:FormulaStrict ")"
+        { return c(left, right, expected, error) }
+    / ExistsSymbol WS v:VariableSymbol f:FormulaStrict
         { return factories.existentialQuant(v, f, expected, error) }
-    / ForallSymbol WS v:VariableSymbol WS f:FormulaStrict
+    / ForallSymbol WS v:VariableSymbol f:FormulaStrict
         { return factories.universalQuant(v, f, expected, error) }
     / NegationSymbol f:FormulaStrict
         { return factories.negation(f, expected, error) }
@@ -81,6 +69,43 @@ FormulaStrictCases
         { return f }
     / "(" f:FormulaStrict ")"
         { return f }
+
+BinaryConnective
+    "binary connective"
+    = ConjunctionSymbol
+        { return factories.conjunction }
+    / DisjunctionSymbol
+        { return factories.disjunction }
+    / ImplicationSymbol
+        { return factories.implication }
+    / EquivalenceSymbol
+        { return factories.equivalence }
+
+
+// ## LANGUAGE-BASED NON-LOGICAL SYMBOLS
+
+VariableSymbol
+    "variable symbol"
+    = $ (i:Identifier & { return language.isVariable(i) })
+
+ConstantSymbol
+    "individual constant symbol"
+    = $ (i:ConstantIdentifier & { return language.isConstant(i) })
+
+FunctionSymbol
+    "function symbol"
+    = $ (i:Identifier & { return language.isFunction(i) })
+
+PredicateSymbol
+    "predicate symbol"
+    = $ (i:Identifier & { return language.isPredicate(i) })
+
+
+// ## LOGICAL SYMBOLS
+
+EqualitySymbol
+    "equality symbol"
+    = "="
 
 ConjunctionSymbol
     "conjunction symbol (one of ∧, &, &&, /\\, \\land, \\wedge)"
@@ -166,22 +191,23 @@ NonEqualitySymbol
     / "/="
     / "\\neq"
 
-//  LANGUAGE NON-LOGICAL SYMBOLS
+
+// ## LANGUAGE SPECIFICATION
 
 Constants
     = WS c1:ConstantIdentifier
-        l:(WS "," WS c2:ConstantIdentifier {return c2})* WS
-        { return [c1].concat(l) }
+        cs:(WS "," WS ci:ConstantIdentifier {return ci})* WS
+        { return [c1].concat(cs) }
 
 Predicates
     = WS p1:LanguagePredicate
-        l:(WS "," WS p2:LanguagePredicate {return p2})* WS
-        { return [p1].concat(l) }
+        ps:(WS "," WS pi:LanguagePredicate {return pi})* WS
+        { return [p1].concat(ps) }
 
 Functions
     = WS f1:LanguageFunction
-        l:(WS "," WS f2:LanguageFunction {return f2})* WS
-        { return [f1].concat(l) }
+        fs:(WS "," WS fi:LanguageFunction {return fi})* WS
+        { return [f1].concat(fs) }
 
 PredicateArity
     "arity of the predicate symbol (non-negative integer)"
@@ -201,31 +227,32 @@ LanguageFunction
     = WS f:Identifier "/" arity:FunctionArity WS
         { return {name: f, arity: arity} }
 
-//  STRUCTURE COMPONENTS
+
+// ## STRUCTURE SPECIFICATION
 
 Domain
-    = WS i1:DomainElement l:(WS "," WS i2:DomainElement {return i2})* WS
-        { return [i1].concat(l) }
+    = WS e1:DomainElement es:(WS "," WS ei:DomainElement {return ei})* WS
+        { return [e1].concat(es) }
 
 DomainElement
     "domain element (any string not containing white space, comma, or parentheses)"
     = $ [^ \t\r\n,()]+
 
 Tuples
-    = WS t1:Tuple l:(WS "," WS t2:Tuple {return t2})* WS
-        { return [t1].concat(l) }
+    = WS t1:Tuple ts:(WS "," WS ti:Tuple {return ti})* WS
+        { return [t1].concat(ts) }
 
 Tuple
     "domain element or n-tuple of domain elements"
-    = "(" WS i1:DomainElement l:(WS "," WS i2:DomainElement {return i2})+
+    = "(" WS e1:DomainElement es:(WS "," WS ei:DomainElement {return ei})+
         WS ")"
-        { return [i1].concat(l) }
-    / WS i:DomainElement WS
-        { return [i] }
+        { return [e1].concat(es) }
+    / WS e:DomainElement WS
+        { return [e] }
 
 Valuation
-    = WS t1:ValuationPair l:(WS "," WS t2:ValuationPair {return t2})* WS
-        { return [t1].concat(l) }
+    = WS p1:ValuationPair ps:(WS "," WS vpi:ValuationPair {return pi})* WS
+        { return [p1].concat(ps) }
 
 ValuationPair
     "valuation pair (“(v, m)”, “v -> m”, or “v \u21A6 m”; v is a variable, m a domain element)"
@@ -236,7 +263,8 @@ ValuationPair
     / v:VariableSymbol WS "\u21A6" WS e:DomainElement
         { return [v, e] }
 
-// WHITE SPACE
+
+// ## WHITE SPACE
 
 WS
     "white space"
@@ -246,8 +274,8 @@ RequiredWS
     "required white space"
     = [ \t\n\r]+
 
-// Unicode class parsing rules taken from
-// https://github.com/pegjs/pegjs/blob/master/examples/javascript.pegjs
+
+// ## IDENTIFIERS
 
 Identifier
     "identifier"
@@ -268,6 +296,9 @@ IdentifierPart
     / UnicodeDigit
     / "\u200C"
     / "\u200D"
+
+
+// ## SELECTED UNICODE CHARACTER CLASSES
 
 UnicodeLetter "letter"
     = Lu
