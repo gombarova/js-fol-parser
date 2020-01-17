@@ -89,6 +89,61 @@ BinaryConnective
         { return factories.equivalence }
 
 
+// ### Formulas with connectives precedence
+
+FormulaWithPrecedence
+    = WS f:ImplicativeFormula WS { return f }
+
+ImplicativeFormula
+    = left:DisjunctiveFormula WS
+        ImplicationSymbol WS right:ImplicativeFormula
+        { return factories.implication(left, right, ee) }
+    / left:DisjunctiveFormula WS
+        EquivalenceSymbol WS right:DisjunctiveFormula
+        { return factories.equivalence(left, right, ee) }
+    / DisjunctiveFormula
+
+DisjunctiveFormula
+    = leftmost:ConjunctiveFormula
+        rights:(
+            WS DisjunctionSymbol WS right:ConjunctiveFormula
+                { return right }
+        )*
+        {
+            return [leftmost,...rights].reduce(
+                (disj, right) =>
+                    factories.disjunction(disj, right, ee)
+            )
+        }
+
+ConjunctiveFormula
+    = leftmost:UnaryFormula
+        rights:(
+            WS ConjunctionSymbol WS right:UnaryFormula
+                { return right }
+        )*
+        {
+            return [leftmost,...rights].reduce(
+                (conj, right) =>
+                    factories.conjunction(conj, right, ee)
+            )
+        }
+
+UnaryFormula
+    = NegationSymbol WS f:UnaryFormula
+        { return factories.negation(f, ee) }
+    / ExistsSymbol WS v:VariableSymbol WS f:UnaryFormula
+        { return factories.existentialQuant(v, f, ee) }
+    / ForallSymbol WS v:VariableSymbol WS f:UnaryFormula
+        { return factories.universalQuant(v, f, ee) }
+    / PrimaryFormula
+
+PrimaryFormula
+    = QuasiAtom
+    / "(" f:FormulaWithPrecedence ")"
+        { return f }
+
+
 // ## LANGUAGE-BASED NON-LOGICAL SYMBOLS
 
 VariableSymbol

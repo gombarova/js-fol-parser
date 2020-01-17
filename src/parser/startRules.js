@@ -2,6 +2,8 @@ const Term = 'Term';
 
 const FormulaStrict = 'FormulaStrict';
 
+const FormulaWithPrecedence = 'FormulaWithPrecedence';
+
 const Constants = 'Constants';
 
 const Predicates = 'Predicates';
@@ -17,6 +19,7 @@ const Valuation = 'Valuation';
 module.exports = {
   Term,
   FormulaStrict,
+  FormulaWithPrecedence,
   Constants,
   Predicates,
   Functions,
@@ -26,6 +29,7 @@ module.exports = {
   'default': [
     Term,
     FormulaStrict,
+    FormulaWithPrecedence,
     Constants,
     Predicates,
     Functions,
