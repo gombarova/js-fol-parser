@@ -4,6 +4,10 @@ const FormulaStrict = 'FormulaStrict';
 
 const FormulaWithPrecedence = 'FormulaWithPrecedence';
 
+const ITerm = 'ITerm';
+
+const IFormulaStrict = 'IFormulaStrict';
+
 const Constants = 'Constants';
 
 const Predicates = 'Predicates';
@@ -20,6 +24,8 @@ module.exports = {
   Term,
   FormulaStrict,
   FormulaWithPrecedence,
+  ITerm,
+  IFormulaStrict,
   Constants,
   Predicates,
   Functions,
@@ -30,6 +36,8 @@ module.exports = {
     Term,
     FormulaStrict,
     FormulaWithPrecedence,
+    ITerm,
+    IFormulaStrict,
     Constants,
     Predicates,
     Functions,

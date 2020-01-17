@@ -163,6 +163,67 @@ PredicateSymbol
     = $ (i:Identifier & { return language.isPredicate(i) })
 
 
+// ## FIRST-ORDER SYNTAX WITH AN INFERRED LANGUAGE
+
+// When no a-priori language is given, parsing requires non-constant
+// look-ahead to distinguish predicate and equality atoms. That will require
+// exponential time in the worst case.
+
+
+// ### Terms
+
+ITerm
+    = WS t:ITermCases WS { return t }
+
+ITermCases
+    "term"
+    = f:Identifier WS "(" ts:ITerms ")"
+        { return factories.functionApplication(f, ts, ee) }
+    / v:ConstantIdentifier
+        { return factories.variable(v, ee) }
+
+ITerms
+    = t:ITerm ts:("," t1:ITerm { return t1 })*
+        { return [t].concat(ts) }
+
+
+// ### Quasi Atoms
+
+IQuasiAtom =
+    "equality or predicate atom"
+    / t1:ITerm EqualitySymbol t2:ITerm
+        { return factories.equalityAtom(t1, t2, ee) }
+    / t1:ITerm NonEqualitySymbol t2:ITerm
+        { return factories.negation(
+            factories.equalityAtom(t1, t2, ee),
+            ee) }
+    / p:Identifier WS "("  ts:ITerms ")"
+        { return factories.predicateAtom(p, ts, ee) }
+    / p:Identifier
+        { return factories.predicateAtom(p, [], ee) }
+
+
+// ### Formulas – stricty binary and fully parenthesized
+
+IFormulaStrict
+    "formula"
+    = WS f:IFormulaStrictCases WS { return f }
+
+IFormulaStrictCases
+    = "(" left:IFormulaStrict c:BinaryConnective right:IFormulaStrict ")"
+        { return c(left, right, ee) }
+    / ExistsSymbol WS v:Identifier f:IFormulaStrict
+        { return factories.existentialQuant(v, f, ee) }
+    / ForallSymbol WS v:Identifier f:IFormulaStrict
+        { return factories.universalQuant(v, f, ee) }
+    / NegationSymbol f:IFormulaStrict
+        { return factories.negation(f, ee) }
+    / f:IQuasiAtom
+        { return f }
+    / "(" f:IFormulaStrict ")"
+        { return f }
+
+
 // ## LOGICAL SYMBOLS
 
 EqualitySymbol
