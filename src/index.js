@@ -66,3 +66,10 @@ export const parseValuation = (input, language) =>
     language,
     factories: null
   })
+
+export const parseSubstitution = (input, language) =>
+  parse(input, {
+    startRule: startRules.Substitution,
+    language,
+    factories: null
+  })

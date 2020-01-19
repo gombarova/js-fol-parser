@@ -303,6 +303,24 @@ ValuationPair
         { return [v, e] }
 
 
+// ## SUBSTITUTIONS
+
+
+// ### Substitution with an a-priori language
+
+Substitution
+    = WS p1:SubstitutionPair
+        ps:(WS "," WS pi:SubstitutionPair {return pi})* WS
+        { return [p1, ...ps] }
+
+SubstitutionPair
+    "substitution pair (“(v, t)”, “v -> t”, or “v \u21A6 t”; v is a variable, t a term)"
+    = "(" WS v:VariableSymbol WS "," WS t:Term WS ")"
+        { return [v, t] }
+    / v:VariableSymbol WS ("->" / "\u21A6") WS t:Term
+        { return [v, t] }
+
+
 // ## WHITE SPACE
 
 WS

@@ -16,6 +16,8 @@ const Tuples = 'Tuples';
 
 const Valuation = 'Valuation';
 
+const Substitution = 'Substitution';
+
 module.exports = {
   Term,
   FormulaStrict,
@@ -26,6 +28,7 @@ module.exports = {
   Domain,
   Tuples,
   Valuation,
+  Substitution,
   'default': [
     Term,
     FormulaStrict,
@@ -35,6 +38,7 @@ module.exports = {
     Functions,
     Domain,
     Tuples,
-    Valuation
+    Valuation,
+    Substitution,
   ]
 }
