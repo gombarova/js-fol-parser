@@ -292,16 +292,14 @@ Tuple
         { return [e] }
 
 Valuation
-    = WS p1:ValuationPair ps:(WS "," WS vpi:ValuationPair {return pi})* WS
+    = WS p1:ValuationPair ps:(WS "," WS pi:ValuationPair {return pi})* WS
         { return [p1].concat(ps) }
 
 ValuationPair
     "valuation pair (“(v, m)”, “v -> m”, or “v \u21A6 m”; v is a variable, m a domain element)"
     = "(" WS v:VariableSymbol WS "," WS e:DomainElement WS ")"
         { return [v, e] }
-    / v:VariableSymbol WS "->" WS e:DomainElement
-        { return [v, e] }
-    / v:VariableSymbol WS "\u21A6" WS e:DomainElement
+    / v:VariableSymbol WS ("->" / "\u21A6") WS e:DomainElement
         { return [v, e] }
 
 
