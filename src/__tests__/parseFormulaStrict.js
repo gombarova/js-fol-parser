@@ -1,8 +1,8 @@
 import {chance} from 'jest-chance'
 
-import {parseFormulaStrict, SyntaxError} from '../index'
+import {parseFormulaStrict} from '../index'
 
-import language, {constants} from './helpers/language'
+import language from './helpers/language'
 
 import factories from './helpers/factories'
 
@@ -101,18 +101,18 @@ describe('shallow strict formula parsing', () => {
     },
     {
       con: '∨',
-      symbols: ['\\lor ', '\\vee ']
+      symbols: ['\\lor', '\\vee']
     },
     {
       con: '→',
       symbols: [
-        '\\limpl ', '\\implies ', '\\rightarrow ', '\\to '
+        '\\limpl', '\\implies', '\\rightarrow', '\\to'
       ]
     },
     {
       con: '↔︎',
       symbols: [
-        '\\lequiv ', '\\leftrightarrow ', '\\equivalent ', '\\equiv '
+        '\\lequiv', '\\leftrightarrow', '\\equivalent', '\\equiv'
       ]
     },
   ].forEach(({con, symbols}) =>
@@ -197,7 +197,7 @@ const chanceLowerDeg = (deg) =>
 const chanceFormulaString = (deg) => {
   if (deg <= 0)
     return chance.pickone(atoms);
-  let i = chance.integer({ min: -binary.length, max: unary.length - 1});
+  const i = chance.integer({ min: -binary.length, max: unary.length - 1});
   if (i >= 0) {
     return unary[i](chanceFormulaString(chanceLowerDeg(deg)));
   }
@@ -210,8 +210,8 @@ const chanceFormulaString = (deg) => {
 describe('nested strict formula parsing (256 randomly generated formulas)',
   () => {
     for (let _i = 0; _i < 256; ++_i) {
-      let f = chanceFormulaString(chance.integer({min: 1, max: 4}));
-      test(`Nested formula "${f}"`, () => {
+      const f = chanceFormulaString(chance.integer({min: 1, max: 4}));
+      test(`nested formula "${f}"`, () => {
         expect(parse(f, idemFactories)).toBe(f);
       });
     }
