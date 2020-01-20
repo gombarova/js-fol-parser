@@ -30,7 +30,6 @@ TermCases
         { return factories.variable(v, ee) }
 
 Terms
-    "comma-separated sequence of one or more terms"
     = t1:Term ts:("," ti:Term { return ti })*
         { return [t1].concat(ts) }
 
