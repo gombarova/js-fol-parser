@@ -21,4 +21,7 @@ export default {
   equivalence: (lhs, rhs, _) => `(${lhs}↔︎${rhs})`,
   existentialQuant: (v, f, _) => `∃${v} ${f}`,
   universalQuant: (v, f, _) => `∀${v} ${f}`,
+  literal: (neg, sym, args, ee) =>
+    `${neg ? '¬' : ''}${applicationWithArityCheck(sym, args, ee)}`,
+  clause: (lits) => lits.length ? lits.join('∨') : '□',
 }

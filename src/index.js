@@ -25,6 +25,13 @@ export const parseFormulaWithPrecedence = (input, language, factories) =>
     factories
   })
 
+export const parseClause = (input, language, factories) =>
+  parse(input, {
+    startRule: startRules.Clause,
+    language,
+    factories
+  })
+
 export const parseConstants = (input) =>
   parse(input, {
     startRule: startRules.Constants,

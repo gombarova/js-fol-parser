@@ -34,13 +34,20 @@ Terms
         { return [t1].concat(ts) }
 
 
-// ### Quasi Atoms
+// ### Predicate atoms
+
+PredicateAtom
+    = p:PredicateSymbol WS "(" ts:Terms ")"
+        { return { predicate: p, arguments: ts } }
+
+
+// ### Quasi atoms
 
 QuasiAtom
     = t1:Term eqNeq:EqNeqSymbol t2:Term
         { return eqNeq(t1, t2, ee) }
-    / p:PredicateSymbol WS "("  ts:Terms ")"
-        { return factories.predicateAtom(p, ts, ee) }
+    / pa:PredicateAtom
+        { return factories.predicateAtom(pa.predicate, pa.arguments, ee) }
     / p:PredicateSymbol
         { return factories.predicateAtom(p, [], ee) }
 
@@ -143,6 +150,35 @@ PrimaryFormula
         { return f }
 
 
+// ### Literals and clauses
+
+Literal
+    = NegationSymbol WS pa:PredicateAtom
+        { return factories.literal(true, pa.predicate, pa.arguments, ee) }
+    / pa:PredicateAtom
+        { return factories.literal(false, pa.predicate, pa.arguments, ee) }
+
+Clause
+    = WS EmptyClause WS
+        { return factories.clause([], ee) }
+    / WS lits:ClauseLiterals WS
+        { return factories.clause(lits, ee) }
+
+ClauseLiterals
+    = leftmost:PrimaryClause
+        rights:(
+            WS (DisjunctionSymbol / ",") WS right:PrimaryClause
+                { return right }
+        )*
+        { return [leftmost,...rights].flat() }
+
+PrimaryClause
+    = lit:Literal
+        { return [lit] }
+    / "(" lits:ClauseLiterals ")"
+        { return lits }
+
+
 // ## LANGUAGE-BASED NON-LOGICAL SYMBOLS
 
 VariableSymbol
@@ -230,6 +266,14 @@ NonEqualitySymbol
     = "≠"
     / "!=" / "<>" / "/="
     / "\\neq" ! IdentifierPart
+
+EmptyClause
+    "empty clause symbol"
+    = "□" / "▫︎" / "◽︎" / "◻︎" / "⬜︎" / "▢" / "⊥"
+    / "[]" / "_|_"
+    / "\\square" ! IdentifierPart
+    / "\\Box"  ! IdentifierPart
+    / "\\qed" ! IdentifierPart
 
 
 // ## LANGUAGE SPECIFICATION
