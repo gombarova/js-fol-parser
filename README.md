@@ -32,7 +32,7 @@ type ErrorExpected = {
 ```
 Not all parsers need all factories.
 
-Typically, each factory will construct a node in an abstract syntax tree
+Typically, each factory will construct a node of an abstract syntax tree
 representing the given case. In case of function applications and predicate
 atoms, the factory can use two callbacks to the parser provided in the `ee`
 argument to throw a syntax error if the number of arguments provided
@@ -57,8 +57,8 @@ while `ee.expected(expectation)` generates a syntax error with the message
 
 ## Language callbacks
 
-Some of the parsers takes a plain object of callbacks that recognize the
-three types of non-logical symbols and variables.
+Some parsers take a plain object of callbacks that recognize the three types
+of non-logical symbols and variables of a first-order language.
 ```typescript
 type Language = {
     isConstant: (symbol: string) => boolean,
@@ -72,24 +72,26 @@ to determine the type of the non-logical symbol.
 
 ## Clauses
 
-The parser of clauses recognizes disjunctions of first-order predicate
-literals (equality literals are not allowed). Literals can be join
-by any disjunction symbol (typically `∨` or `|`) or the comma (`,`).
+The parser of clauses recognizes (possibly nested) disjunctions of
+first-order predicate literals. Equality literals are not allowed.
+Literals can be joined by any disjunction symbol (typically `∨` or `|`)
+or the comma (`,`).
 The empty clause can be given by several symbols (typically `□` or `[]`).
-The empty string is not considered the empty clause. The empty clause cannot
-be used as a literal.
+The empty string is not considered the empty clause.
+The empty clause cannot be used as a literal.
 
 The clause parser could be typed as follows:
 ```typescript
 function parseClause(input: string, language: Language, factories: Factories): any
 ```
-The parser only needs two factories: `literal` and `clause`.
+This parser uses only two factories: `literal` and `clause`.
 
-The parser is typically used as follows: Suppose we have classes `Literal`
-and `Clause` defined in a module `clauses.js` and that we use the
-parser in a function that obtain the sets of symbols `constants`,
-`functions`, and `predicates`. The clause parser is then set up and called
-as follows:
+The parser is typically used as follows:
+Suppose that we have classes `Literal` and `Clause`
+defined in a module `clauses.js`
+and that we use the parser in a function
+that obtains sets of symbols `constants`, `functions`, and `predicates`.
+The clause parser is then set up and called as follows:
 ```javascript
 import {parseClause} from 'js-fol-parser';
 import {Literal, Clause} from './clauses.js';
@@ -107,7 +109,7 @@ function someFunctionUsingTheParser(constants, functions, predicates) {
     const factories = {
         literal: (negated, symbol, args, _) =>
             new Literal(negated, symbol, args),
-        clause: (literals) =>
+        clause: (literals, _) =>
             new Clause(literals)
     }
     const clause = parseClause(input, language, factories);
