@@ -7,68 +7,89 @@ connectives and several alternative grammars.
 
 Most parsers take a plain object consisting of factory functions that
 are expected to create representations of syntactic elements recognized
-by the parser. The full set of factories is as follows:
+by the parser. The required set of factories depends on the parser.
+
+The most basic sets consists of factories producing terms:
 ```typescript
-type Factories = {
-  variable: (symbol: string, ee: ErrorExpected) => any,
-  constant: (symbol: string, ee: ErrorExpected) => any,
-  functionApplication: (symbol: string, args: Array<any>, ee: ErrorExpected) => any,
-  predicateAtom: (symbol: string, args: Array<any>, ee: ErrorExpected) => any,
-  equalityAtom: (lhs: any, rhs: any, ee: ErrorExpected) => any,
-  negation: (subf: any, ee: ErrorExpected) => any,
-  conjunction: (lhs: any, rhs: any, ee: ErrorExpected) => any,
-  disjunction: (lhs: any, rhs: any, ee: ErrorExpected) => any,
-  implication: (lhs: any, rhs: any, ee: ErrorExpected) => any,
-  equivalence: (lhs: any, rhs: any, ee: ErrorExpected) => any,
-  existentialQuant: (variable: string, subf: any, ee: ErrorExpected) => any,
-  universalQuant: (variable: string, subf: any, ee: ErrorExpected) => any,
-  literal: (negated: boolean, symbol: string, args: Array<any>, ee: ErrorExpected) => any,
-  clause: (literals: Array<any>) => any,
-}
-type ErrorExpected = {
-    error: (message: string) => (),
-    expected: (expectation: string) => ()
+interface TermFactories<Term> {
+    variable: (symbol: string, ee: ErrorExpected) => Term,
+    constant: (symbol: string, ee: ErrorExpected) => Term,
+    functionApplication: (symbol: string, args: Array<Term>, ee: ErrorExpected) => Term
 }
 ```
-Not all parsers need all factories.
+
+Parsers of formulas need term factories and factories producing the various
+cases of formulas:
+```typescript
+interface FormulaFactories<Term, Formula>
+extends TermFactories<Term> {
+    variable: (symbol: string, ee: ErrorExpected) => Term,
+    constant: (symbol: string, ee: ErrorExpected) => Term,
+    functionApplication: (symbol: string, args: Array<Term>, ee: ErrorExpected) => Term,
+    predicateAtom: (symbol: string, args: Array<Term>, ee: ErrorExpected) => Formula,
+    equalityAtom: (lhs: Term, rhs: Term, ee: ErrorExpected) => Formula,
+    negation: (subf: Formula, ee: ErrorExpected) => Formula,
+    conjunction: (lhs: Formula, rhs: Formula, ee: ErrorExpected) => Formula,
+    disjunction: (lhs: Formula, rhs: Formula, ee: ErrorExpected) => Formula,
+    implication: (lhs: Formula, rhs: Formula, ee: ErrorExpected) => Formula,
+    equivalence: (lhs: Formula, rhs: Formula, ee: ErrorExpected) => Formula,
+    existentialQuant: (variable: string, subf: Formula, ee: ErrorExpected) => Formula,
+    universalQuant: (variable: string, subf: Formula, ee: ErrorExpected) => Formula
+}
+```
+
+Parsers of clauses require term factories and factories producing literals
+and clauses:
+```typescript
+interface ClauseFactories<Term, Literal, Clause>
+extends TermFactories<Term> {
+    literal: (negated: boolean, symbol: string, args: Array<Term>, ee: ErrorExpected) => Literal,
+    clause: (literals: Array<Literal>) => Clause,
+}
+```
 
 Typically, each factory will construct a node of an abstract syntax tree
-representing the given case. In case of function applications and predicate
-atoms, the factory can use two callbacks to the parser provided in the `ee`
-argument to throw a syntax error if the number of arguments provided
-differs from the symbol arity.
-```javascript
-{
-  variable: (symbol, _) => new Variable(symbol),
-  ...,
-  predicateAtom: (symbol, args, {expected}) => {
-    const a = arity(symbol);
-    if (args.length !== a) {
-        expected(`${a} argument${(a == 1 ? '' : 's')} to ${symbol}`);
-    }
-    return new PredicateAtom(symbol, args);
-  }
-  ...
+representing the given case.
+However, factories can produce any output.
+For instance,
+they can directly generate canonical string representations
+of terms and formulas,
+or directly evaluate them, returning domain elements for terms
+and booleans for formulas, respectively.
+
+Factories can use two callbacks to the parser provided in the `ee` argument
+to throw a syntax error.
+```typescript
+interface ErrorExpected {
+    error: (message: string) => void,
+    expected: (expectation: string) => void
 }
 ```
+Throwing syntax errors is useful, e.g.,
+if the number of arguments provided
+in a function application or a predicate atom
+differs from the symbol arity.
+This can be seen in the examples of parser usage below.
+
 Note that `ee.error(message)` generates a syntax error with `message`
 while `ee.expected(expectation)` generates a syntax error with the message
-<code>\`Expected ${expectation} but ${actual_input} found.\`</code>.
+<code>\`Expected ${expectation} but "${actual_input}" found.\`</code>.
+The latter should be preferred.
 
 ## Language callbacks
 
 Some parsers take a plain object of callbacks that recognize the three types
-of non-logical symbols and variables of a first-order language.
+of non-logical symbols and the variables of a first-order language.
 ```typescript
-type Language = {
+interface Language {
     isConstant: (symbol: string) => boolean,
     isFunction: (symbol: string) => boolean,
     isPredicate: (symbol: string) => boolean,
-    isVariable: (symbol: string) => boolean
+    isVariable: (symbol: string) => boolean,
 }
 ```
-When the parser encounters a JavaScript identifier, it uses these callbacks
-to determine the type of the non-logical symbol.
+When the parser encounters a JavaScript identifier,
+it uses these callbacks to determine the type of the symbol.
 
 ## Clauses
 
@@ -82,36 +103,63 @@ The empty clause cannot be used as a literal.
 
 The clause parser could be typed as follows:
 ```typescript
-function parseClause(input: string, language: Language, factories: Factories): any
+function parseClause<Term, Literal, Clause>(input: String, language: Language, factories: ClauseFactories<Term, Literal, Clause>): Clause
 ```
-This parser uses only two factories: `literal` and `clause`.
 
 The parser is typically used as follows:
 Suppose that we have classes `Literal` and `Clause`
-defined in a module `clauses.js`
-and that we use the parser in a function
-that obtains sets of symbols `constants`, `functions`, and `predicates`.
+defined in a module `clauses.js`,
+classes `Variable`, `Constant`, and `FunctionApplication`
+defined in a module `terms.js`,
+and that we use the clause parser in a function
+that obtains the set of symbols `constants`,
+and two maps of symbols to arities `functions` and `predicates`.
 The clause parser is then set up and called as follows:
 ```javascript
-import {parseClause} from 'js-fol-parser';
+import {parseClause} from '@fmfi-uk-1-ain-412/js-fol-parser';
+import {Constant, Variable, FunctionApplication} from "./terms.js";
 import {Literal, Clause} from './clauses.js';
 
-function someFunctionUsingTheParser(constants, functions, predicates) {
+function usingTheClauseParser(constants, functions, predicates) {
     ...
+    const nonLogicalSymbols =
+        new Set([...constants, ...functions.keys(), ...predicates.keys()])
+
     const language = {
-        isConstant: (symbol) => constants.has(symbol),
-        isFunction: (symbol) => functions.has(symbol),
-        isPredicate: (symbol) => predicates.has(symbol),
+        isConstant: (symbol) =>
+            constants.has(symbol),
+        isFunction: (symbol) =>
+            functions.has(symbol),
+        isPredicate: (symbol) =>
+            predicates.has(symbol),
         isVariable: (symbol) =>
-            !constants.has(symbol) && !functions.has(symbol) &&
-            !predicates.has(symbol),
+            !nonLogicalSymbols.has(symbol),
     }
+
+    function checkArity(symbol, args, arityMap, {expected}) {
+        const a = arityMap.get(symbol);
+        if (args.length !== a) {
+            expected(`${a} argument${(a == 1 ? '' : 's')} to ${symbol}`);
+        }
+    }
+
     const factories = {
-        literal: (negated, symbol, args, _) =>
-            new Literal(negated, symbol, args),
+        variable: (symbol, _) =>
+            new Variable(symbol),
+        constant: (symbol, _) =>
+            new Constant(symbol),
+        functionApplication: (funSymbol, args, ee) => {
+            checkArity(funSymbol, args, functions, ee);
+            return new FunctionApplication(funSymbol, args);
+        },
+        literal: (negated, predSymbol, args, ee) => {
+            checkArity(predSymbol, args, predicates, ee);
+            return new Literal(negated, predSymbol, args);
+        },
         clause: (literals, _) =>
             new Clause(literals)
     }
+
     const clause = parseClause(input, language, factories);
     ...
 }
