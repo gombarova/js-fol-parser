@@ -295,21 +295,24 @@ Functions
 
 PredicateArity
     "arity of the predicate symbol (non-negative integer)"
-    = $ ([0-9]+)
+    = Nat
 
 FunctionArity
     "arity of the function symbol (positive integer)"
-    = $ ([1-9]+)
+    = a:Nat & { return a > 0 } { return a }
+
+Nat
+    = digits:[0-9]+ { return parseInt(digits, 10) }
 
 LanguagePredicate
     "predicate identifier/non-negative arity"
-    = WS predicate:Identifier "/" arity:PredicateArity WS
-        { return {name: predicate, arity: arity} }
+    = WS name:Identifier WS "/" WS arity:PredicateArity WS
+        { return {name: name, arity: arity} }
 
 LanguageFunction
     "function identifier/positive arity"
-    = WS f:Identifier "/" arity:FunctionArity WS
-        { return {name: f, arity: arity} }
+    = WS name:Identifier WS "/" WS arity:FunctionArity WS
+        { return {name: name, arity: arity} }
 
 
 // ## STRUCTURE SPECIFICATION
