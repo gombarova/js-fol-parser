@@ -1,6 +1,6 @@
 {
   "name": "@fmfi-uk-1-ain-412/js-fol-parser",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A JavaScript parser for first-order logic languages",
   "repository": "https://github.com/FMFI-UK-1-AIN-412/js-fol-parser",
   "files": [
@@ -31,15 +31,16 @@
     "test": "npx kcd-scripts test"
   },
   "devDependencies": {
-    "@babel/cli": "^7.6.4",
-    "@babel/core": "^7.6.4",
-    "@babel/preset-env": "^7.6.3",
+    "@babel/cli": "^7.8.3",
+    "@babel/core": "^7.8.3",
+    "@babel/preset-env": "^7.8.3",
     "cross-spawn": "^7.0.0",
     "jest-chance": "^0.1.8",
-    "kcd-scripts": "^1.14.0",
-    "pegjs": "^0.10.0"
+    "kcd-scripts": "^4.1.0",
+    "pegjs": "^0.10.0",
+    "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@babel/runtime": "^7.6.3"
+    "@babel/runtime": "^7.8.3"
   }
 }
