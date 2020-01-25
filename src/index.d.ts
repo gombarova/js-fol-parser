@@ -62,30 +62,30 @@ declare module "@fmfi-uk-1-ain-412/js-fol-parser" {
         clause: (literals: Array<Literal>) => Clause,
     }
 
-    export function parseTerm<Term>(input: String, language: Language, factories: TermFactories<Term>): Term;
+    export function parseTerm<Term>(input: string, language: Language, factories: TermFactories<Term>): Term;
 
-    export function parseFormula<Term, Formula>(input: String, language: Language, factories: FormulaFactories<Term, Formula>): Formula;
+    export function parseFormula<Term, Formula>(input: string, language: Language, factories: FormulaFactories<Term, Formula>): Formula;
 
-    export function parseFormulaWithPrecedence<Term, Formula>(input: String, language: Language, factories: FormulaFactories<Term, Formula>): Formula;
+    export function parseFormulaWithPrecedence<Term, Formula>(input: string, language: Language, factories: FormulaFactories<Term, Formula>): Formula;
 
-    export function parseClause<Term, Literal, Clause>(input: String, language: Language, factories: ClauseFactories<Term, Literal, Clause>): Clause;
+    export function parseClause<Term, Literal, Clause>(input: string, language: Language, factories: ClauseFactories<Term, Literal, Clause>): Clause;
 
     export interface SymbolWithArity {
         name: string,
         arity: number
     }
 
-    export function parseConstants(input: string): Array<String>;
+    export function parseConstants(input: string): Array<string>;
 
     export function parseFunctions(input: string): Array<SymbolWithArity>;
 
     export function parsePredicates(input: string): Array<SymbolWithArity>;
 
-    export function parseDomain(input: string): Array<String>;
+    export function parseDomain(input: string): Array<string>;
 
     export function parseTuples(input: string): Array<Array<string>>;
 
     export function parseValuation(input: string): Array<[string, string]>;
 
-    export function parseSubstitution<Term>(input: String, language: Language, factories: TermFactories<Term>): Array<[string, Term]>;
+    export function parseSubstitution<Term>(input: string, language: Language, factories: TermFactories<Term>): Array<[string, Term]>;
 }
