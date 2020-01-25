@@ -104,8 +104,11 @@ ImplicativeFormula
     = left:DisjunctiveFormula WS
         ImplicationSymbol WS right:ImplicativeFormula
         { return factories.implication(left, right, ee) }
-    / left:DisjunctiveFormula WS
-        EquivalenceSymbol WS right:DisjunctiveFormula
+    / EquivalenceFormula
+
+EquivalenceFormula
+    = left:DisjunctiveFormula
+            WS EquivalenceSymbol WS right:EquivalenceFormula
         { return factories.equivalence(left, right, ee) }
     / DisjunctiveFormula
 
