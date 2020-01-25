@@ -326,7 +326,7 @@ Domain
 
 DomainElement
     "domain element (any string not containing white space, comma, or parentheses)"
-    = $ [^ \t\r\n,()]+
+    = $ [^,()\t\n\r\v\f\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+
 
 Tuples
     = WS t1:Tuple ts:(WS "," WS ti:Tuple {return ti})* WS
@@ -345,10 +345,9 @@ Valuation
         { return [p1].concat(ps) }
 
 ValuationPair
-    "valuation pair (“(v, m)”, “v -> m”, or “v \u21A6 m”; v is a variable, m a domain element)"
     = "(" WS v:VariableSymbol WS "," WS e:DomainElement WS ")"
         { return [v, e] }
-    / v:VariableSymbol WS ("->" / "\u21A6") WS e:DomainElement
+    / v:VariableSymbol WS MapsTo WS e:DomainElement
         { return [v, e] }
 
 
@@ -363,22 +362,31 @@ Substitution
         { return [p1, ...ps] }
 
 SubstitutionPair
-    "substitution pair (“(v, t)”, “v -> t”, or “v \u21A6 t”; v is a variable, t a term)"
     = "(" WS v:VariableSymbol WS "," WS t:Term WS ")"
         { return [v, t] }
-    / v:VariableSymbol WS ("->" / "\u21A6") WS t:Term
+    / v:VariableSymbol WS MapsTo WS t:Term
         { return [v, t] }
+
+
+// ### Maps-to symbols
+
+MapsTo
+    "a maps-to symbol (\"->\", \"|->\", \"↦\", \"⟼\", or \"\\mapsto\")"
+    = "->"
+    / "|->"
+    / [\u21A6\u27FC]
+    / "\\mapsto" ! IdentifierPart
 
 
 // ## WHITE SPACE
 
 WS
     "white space"
-    = [ \t\n\r]*
+    = (Zs / [\t\n\r\v\f])*
 
 RequiredWS
     "required white space"
-    = [ \t\n\r]+
+    = (Zs / [\t\n\r\v\f])+
 
 
 // ## IDENTIFIERS
@@ -389,7 +397,7 @@ Identifier
 
 ConstantIdentifier
     "constant identifier"
-    = $ IdentifierPart+
+    = $ ((IdentifierStart / UnicodeDigit) IdentifierPart*)
 
 IdentifierStart
     = UnicodeLetter
