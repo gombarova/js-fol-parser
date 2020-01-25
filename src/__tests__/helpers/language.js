@@ -17,7 +17,7 @@ const _predicates = new Map(Object.entries({
 export const predicates = new Set(_predicates.keys())
 
 const symbolsWithArity =
-  new Map([..._functions].concat([..._predicates]))
+  new Map([..._functions, ..._predicates])
 
 const isConstant = i => constants.has(i)
 const isFunction = i => functions.has(i)
