@@ -9,7 +9,7 @@ import factories from './helpers/factories'
 const parse = (str, fs = factories) =>
   parseFormulaStrict(str, language, fs)
 
-describe('shallow strict formula parsing', () => {
+describe('atoms', () => {
   test('predicate atoms', () => {
     expect(parse('p(1)')).toBe('p(c:1)');
     expect(parse('Q(x,1)')).toBe('Q(v:x,c:1)');
@@ -52,6 +52,32 @@ describe('shallow strict formula parsing', () => {
             'G(f(c:aConstant),G(c:1,c:c)))');
   });
 
+  test('non-atoms', () => {
+    expect(() => parse('x(x)')).toThrow(/formula but "x"/);
+    expect(() => parse('c(x)')).toThrow(/formula but "c"/);
+    expect(() => parse('f(x)')).toThrow(/formula but "f"/);
+    expect(() => parse('f(x,)')).toThrow(/formula but "f"/);
+    expect(() => parse('f(,x)')).toThrow(/formula but "f"/);
+    expect(() => parse('G(x,)')).toThrow(/formula but "G"/);
+    expect(() => parse('G(,x)')).toThrow(/formula but "G"/);
+    expect(() => parse('f(x,y)')).toThrow(/1 argument to f but "f\(x,y\)"/);
+    expect(() => parse('G(x)')).toThrow(/2 arguments to G/);
+    expect(() => parse('aFunction(1,c)')).toThrow(/4 arguments/);
+    expect(() => parse('p(p)')).toThrow(/1 argument to p but "p"/);
+    expect(() => parse('p()')).toThrow(/1 argument to p but "p"/);
+    expect(() => parse('p')).toThrow(/1 argument to p but "p"/);
+    expect(() => parse('Q(x,)')).toThrow(/2 arguments to Q but "Q"/);
+    expect(() => parse('Q(,x)')).toThrow(/2 arguments to Q but "Q"/);
+    expect(() => parse('p(x,y)')).toThrow(/1 argument to p but "p\(x,y\)"/);
+    expect(() => parse('Q(x)')).toThrow(/2 arguments to Q but "Q\(x\)"/);
+    expect(() => parse('aPredicate(aFunction(1,c,x,y),c,x,y)'))
+      .toThrow(/5 arguments/);
+    expect(() => parse('p(x) = f(y)')).toThrow(/end of input but "="/);
+    expect(() => parse('f(x) = p(y)')).toThrow(/formula but "f"/);
+  })
+});
+
+describe('shallow strict formulas', () => {
   test.each(['¬', '-', '~', '\\lnot ','\\neg '])('negation as %s',
     sym => {
       expect(parse(`${sym}p(x)`)).toBe('¬p(v:x)');
@@ -141,30 +167,6 @@ describe('shallow strict formula parsing', () => {
       }
     )
   );
-
-  test('non-atoms', () => {
-    expect(() => parse('x(x)')).toThrow(/formula but "x"/);
-    expect(() => parse('c(x)')).toThrow(/formula but "c"/);
-    expect(() => parse('f(x)')).toThrow(/formula but "f"/);
-    expect(() => parse('f(x,)')).toThrow(/formula but "f"/);
-    expect(() => parse('f(,x)')).toThrow(/formula but "f"/);
-    expect(() => parse('G(x,)')).toThrow(/formula but "G"/);
-    expect(() => parse('G(,x)')).toThrow(/formula but "G"/);
-    expect(() => parse('f(x,y)')).toThrow(/1 argument to f but "f\(x,y\)"/);
-    expect(() => parse('G(x)')).toThrow(/2 arguments to G/);
-    expect(() => parse('aFunction(1,c)')).toThrow(/4 arguments/);
-    expect(() => parse('p(p)')).toThrow(/1 argument to p but "p"/);
-    expect(() => parse('p()')).toThrow(/1 argument to p but "p"/);
-    expect(() => parse('p')).toThrow(/1 argument to p but "p"/);
-    expect(() => parse('Q(x,)')).toThrow(/2 arguments to Q but "Q"/);
-    expect(() => parse('Q(,x)')).toThrow(/2 arguments to Q but "Q"/);
-    expect(() => parse('p(x,y)')).toThrow(/1 argument to p but "p\(x,y\)"/);
-    expect(() => parse('Q(x)')).toThrow(/2 arguments to Q but "Q\(x\)"/);
-    expect(() => parse('aPredicate(aFunction(1,c,x,y),c,x,y)'))
-      .toThrow(/5 arguments/);
-    expect(() => parse('p(x) = f(y)')).toThrow(/end of input but "="/);
-    expect(() => parse('f(x) = p(y)')).toThrow(/formula but "f"/);
-    })
 })
 
 const idemFactories = {

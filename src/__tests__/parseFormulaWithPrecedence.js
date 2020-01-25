@@ -9,7 +9,7 @@ import factories from './helpers/factories'
 const parse = (str, fs = factories) =>
   parseFormulaWithPrecedence(str, language, fs)
 
-describe('shallow formula parsing with precedence', () => {
+describe('atoms', () => {
   test('predicate atoms', () => {
     expect(parse('p(1)')).toBe('p(c:1)');
     expect(parse('Q(x,1)')).toBe('Q(v:x,c:1)');
@@ -52,6 +52,40 @@ describe('shallow formula parsing with precedence', () => {
             'G(f(c:aConstant),G(c:1,c:c)))');
   });
 
+  test('non-atoms', () => {
+    expect(() => parse('x(x)'))
+      .toThrow(/equality symbol or non-equality symbol but "\("/);
+    expect(() => parse('c(x)'))
+      .toThrow(/equality symbol or non-equality symbol but "\("/);
+    expect(() => parse('f(x)'))
+      .toThrow(/equality symbol or non-equality symbol but end/);
+    expect(() => parse('f(x,)'))
+      .toThrow(/"\(", existential quantifier, negation symbol, predicate symbol, term, or universal quantifier but "f"/);
+    expect(() => parse('f(,x)'))
+      .toThrow(/"\(", existential quantifier, negation symbol, predicate symbol, term, or universal quantifier but "f"/);
+    expect(() => parse('G(x,)'))
+      .toThrow(/"\(", existential quantifier, negation symbol, predicate symbol, term, or universal quantifier but "G"/);
+    expect(() => parse('G(,x)'))
+      .toThrow(/"\(", existential quantifier, negation symbol, predicate symbol, term, or universal quantifier but "G"/);
+    expect(() => parse('f(x,y)')).toThrow(/1 argument to f but "f\(x,y\)"/);
+    expect(() => parse('G(x)')).toThrow(/2 arguments to G/);
+    expect(() => parse('aFunction(1,c)')).toThrow(/4 arguments/);
+    expect(() => parse('p(p)')).toThrow(/1 argument to p but "p"/);
+    expect(() => parse('p()')).toThrow(/1 argument to p but "p"/);
+    expect(() => parse('p')).toThrow(/1 argument to p but "p"/);
+    expect(() => parse('Q(x,)')).toThrow(/2 arguments to Q but "Q"/);
+    expect(() => parse('Q(,x)')).toThrow(/2 arguments to Q but "Q"/);
+    expect(() => parse('p(x,y)')).toThrow(/1 argument to p but "p\(x,y\)"/);
+    expect(() => parse('Q(x)')).toThrow(/2 arguments to Q but "Q\(x\)"/);
+    expect(() => parse('aPredicate(aFunction(1,c,x,y),c,x,y)'))
+      .toThrow(/5 arguments/);
+    expect(() => parse('p(x) = f(y)'))
+      .toThrow(/conjunction symbol, disjunction symbol, end of input, equivalence symbol, or implication symbol but "="/);
+    expect(() => parse('f(x) = p(y)')).toThrow(/term but "p"/);
+  })
+});
+
+describe('shallow formula parsing with precedence', () => {
   test.each(['¬', '-', '~', '\\lnot ','\\neg '])('negation as %s',
     sym => {
       expect(parse(`${sym}p(x)`)).toBe('¬p(v:x)');
@@ -143,38 +177,6 @@ describe('shallow formula parsing with precedence', () => {
       }
     )
   );
-
-  test('non-atoms', () => {
-    expect(() => parse('x(x)'))
-      .toThrow(/equality symbol or non-equality symbol but "\("/);
-    expect(() => parse('c(x)'))
-      .toThrow(/equality symbol or non-equality symbol but "\("/);
-    expect(() => parse('f(x)'))
-      .toThrow(/equality symbol or non-equality symbol but end/);
-    expect(() => parse('f(x,)'))
-      .toThrow(/"\(", existential quantifier, negation symbol, predicate symbol, term, or universal quantifier but "f"/);
-    expect(() => parse('f(,x)'))
-      .toThrow(/"\(", existential quantifier, negation symbol, predicate symbol, term, or universal quantifier but "f"/);
-    expect(() => parse('G(x,)'))
-      .toThrow(/"\(", existential quantifier, negation symbol, predicate symbol, term, or universal quantifier but "G"/);
-    expect(() => parse('G(,x)'))
-      .toThrow(/"\(", existential quantifier, negation symbol, predicate symbol, term, or universal quantifier but "G"/);
-    expect(() => parse('f(x,y)')).toThrow(/1 argument to f but "f\(x,y\)"/);
-    expect(() => parse('G(x)')).toThrow(/2 arguments to G/);
-    expect(() => parse('aFunction(1,c)')).toThrow(/4 arguments/);
-    expect(() => parse('p(p)')).toThrow(/1 argument to p but "p"/);
-    expect(() => parse('p()')).toThrow(/1 argument to p but "p"/);
-    expect(() => parse('p')).toThrow(/1 argument to p but "p"/);
-    expect(() => parse('Q(x,)')).toThrow(/2 arguments to Q but "Q"/);
-    expect(() => parse('Q(,x)')).toThrow(/2 arguments to Q but "Q"/);
-    expect(() => parse('p(x,y)')).toThrow(/1 argument to p but "p\(x,y\)"/);
-    expect(() => parse('Q(x)')).toThrow(/2 arguments to Q but "Q\(x\)"/);
-    expect(() => parse('aPredicate(aFunction(1,c,x,y),c,x,y)'))
-      .toThrow(/5 arguments/);
-    expect(() => parse('p(x) = f(y)'))
-      .toThrow(/conjunction symbol, disjunction symbol, end of input, equivalence symbol, or implication symbol but "="/);
-    expect(() => parse('f(x) = p(y)')).toThrow(/term but "p"/);
-    })
 })
 
 describe('depth 2 formula parsing with precedence', () => {
@@ -200,7 +202,7 @@ describe('depth 2 formula parsing with precedence', () => {
     )
   )
 
-  test.each(['∧', '∨'])(`%s is right-associative`,
+  test.each(['∧', '∨'])(`%s is left-associative`,
     con => {
       expect(parse(`p(x)${con}f(c)=y${con}Q(c,1)`))
         .toBe(`((p(v:x)${con}f(c:c)=v:y)${con}Q(c:c,c:1))`);
@@ -225,7 +227,7 @@ describe('depth 2 formula parsing with precedence', () => {
     }
   );
 
-  test.each(['→'])(`%s is left-associative`,
+  test.each(['→', '↔︎'])(`%s is right-associative`,
     con => {
       expect(parse(`p(x)${con}f(c)=y${con}Q(c,1)`))
         .toBe(`(p(v:x)${con}(f(c:c)=v:y${con}Q(c:c,c:1)))`);
@@ -237,16 +239,11 @@ describe('depth 2 formula parsing with precedence', () => {
         .toBe(`(p(v:x)→(f(c:c)=v:y↔︎Q(c:c,c:1)))`);
   });
 
-  test('unless ↔︎ terminates a chain of →, their mutual precedence is unspecified', () => {
+  test('the precedence of ↔︎ to the left of → is unspecified', () => {
     expect(() => parse(`p(x)↔︎f(c)=y→Q(c,1)`))
-      .toThrow('conjunction symbol, disjunction symbol, or end of input but "→"');
+      .toThrow('conjunction symbol, disjunction symbol, end of input, or equivalence symbol but "→"');
     expect(() => parse(`p(x)→f(c)=y↔︎Q(c,1)→Q(c,aConstant)`))
-      .toThrow('conjunction symbol, disjunction symbol, or end of input but "→"');
-  });
-
-  test(`↔︎ is not associative`, () => {
-    expect(() => parse(`p(x)↔︎f(c)=y↔︎Q(c,1)`))
-      .toThrow('conjunction symbol, disjunction symbol, or end of input but "↔"');
+      .toThrow('conjunction symbol, disjunction symbol, end of input, or equivalence symbol but "→"');
   });
 })
 
