@@ -401,6 +401,7 @@ ConstantIdentifier
 
 IdentifierStart
     = UnicodeLetter
+    / UnicodeMathematicalAlphanumeric
     / "$"
     / "_"
 
@@ -408,8 +409,26 @@ IdentifierPart
     = IdentifierStart
     / UnicodeCombiningMark
     / UnicodeDigit
+    / UnicodeSubscriptDigit
+    / UnicodeSuperscriptDigit
     / "\u200C"
     / "\u200D"
+
+
+// ### Mathematical Alphanumeric Symbols
+
+UnicodeMathematicalAlphanumeric
+    = [\uD835] [\uDC00-\uDFFF]
+    / [\u2012\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2128\u212C\u212D\u212F-\u2131\u2133-\u2138\u213C-\u2140\u2145-\u2149]
+
+
+// ### Sub- and Superscript Digits
+
+UnicodeSubscriptDigit
+    = [\u2080-\u2089]
+
+UnicodeSuperscriptDigit
+    = [\u2070\u00B9\u00B2\u00B3\u2074-\u2079]
 
 
 // ## SELECTED UNICODE CHARACTER CLASSES
