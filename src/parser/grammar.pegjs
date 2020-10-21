@@ -12,7 +12,7 @@
 }
 
 
-// ## FIRST-ORDER SYNTAX OVER AN A-PRIORI LANGUAGE
+// ## FIRST-ORDER SYNTAX OVER A GIVEN LANGUAGE
 
 
 // ### Terms
@@ -178,7 +178,7 @@ ClauseLiterals
 PrimaryClause
     = lit:Literal
         { return [lit] }
-    / "(" lits:ClauseLiterals ")"
+    / "(" WS lits:ClauseLiterals WS ")"
         { return lits }
 
 

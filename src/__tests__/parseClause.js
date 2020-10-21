@@ -61,6 +61,21 @@ describe('simple clauses parsing', () => {
       .toBe('p(f(v:y))∨¬Q(c:c,v:y)∨¬p(v:x)∨Q(G(c:1,f(v:y)),c:c)');
   });
 
+  test('a longer clause with spaces and parentheses', () => {
+    expect(parse(' (  p(x) ∨ ( ¬Q(c,y) ∨ ¬Q(G(1,f(y)),c) ) ∨ ¬p(f(y)) ) '))
+      .toBe('p(v:x)∨¬Q(c:c,v:y)∨¬Q(G(c:1,f(v:y)),c:c)∨¬p(f(v:y))');
+    expect(parse('( p(x) ∨ ( ¬Q(c,y) ∨ ( ¬Q(G(1,f(y)),c) ∨ ¬p(f(y)) )))'))
+      .toBe('p(v:x)∨¬Q(c:c,v:y)∨¬Q(G(c:1,f(v:y)),c:c)∨¬p(f(v:y))');
+    expect(parse('(((p(x) ∨ ¬Q(c,y) ) ∨ ¬Q(G(1,f(y)),c) ) ∨ ¬p(f(y)) )'))
+      .toBe('p(v:x)∨¬Q(c:c,v:y)∨¬Q(G(c:1,f(v:y)),c:c)∨¬p(f(v:y))');
+    expect(parse(' (  p(x),  ( ¬Q(c,y),  ¬Q(G(1,f(y)),c) ),  ¬p(f(y)) ) '))
+      .toBe('p(v:x)∨¬Q(c:c,v:y)∨¬Q(G(c:1,f(v:y)),c:c)∨¬p(f(v:y))');
+    expect(parse('( p(x),  ( ¬Q(c,y),  ( ¬Q(G(1,f(y)),c), ¬p(f(y)) )))'))
+      .toBe('p(v:x)∨¬Q(c:c,v:y)∨¬Q(G(c:1,f(v:y)),c:c)∨¬p(f(v:y))');
+    expect(parse('(((p(x), ¬Q(c,y) ), ¬Q(G(1,f(y)),c) ), ¬p(f(y)) )'))
+      .toBe('p(v:x)∨¬Q(c:c,v:y)∨¬Q(G(c:1,f(v:y)),c:c)∨¬p(f(v:y))');
+  });
+
   test('non-atoms', () => {
     expect(() => parse('p(x,y)')).toThrow(/1 argument to p but "p\(x,y\)"/);
     expect(() => parse('Q(x)')).toThrow(/2 arguments to Q but "Q\(x\)"/);
