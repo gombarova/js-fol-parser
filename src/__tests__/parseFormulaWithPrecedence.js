@@ -297,3 +297,34 @@ describe('nested strict formula parsing (256 randomly generated formulas)',
     }
   }
 )
+
+describe('very deep, right-parenthesized clause', () => {
+  test('...', () => {
+    let deepIn = 'p(c)';
+    let deepOut = 'p(c:c)';
+    for (let i = 0; i < 10; i++) {
+      deepIn = `(p(c)∨${deepIn})`;
+      deepOut = `(p(c:c)∨${deepOut})`;
+    }
+    expect(parse(deepIn)).toBe(deepOut);
+  });
+})
+
+describe('very deep, left-parenthesized clause', () => {
+  test('...', () => {
+    let deepIn = 'p(c)';
+    let deepOut = 'p(c:c)';
+    for (let i = 0; i < 10; i++) {
+      deepIn = `(${deepIn}∨p(c))`;
+      deepOut = `(${deepOut}∨p(c:c))`;
+    }
+    expect(parse(deepIn)).toBe(deepOut);
+  });
+})
+
+// describe('very deep, fully right-parenthesized formula in DNF', () => {
+//   test('...', () => {
+//     expect(parse(`((pozicia(barman)&&zamestnanec(Ema))∨((pozicia(casnik)&&zamestnanec(Ema))∨((pozicia(upratovacka)&&zamestnanec(Ema))∨((pozicia(vyhadzovac)&&zamestnanec(Ema))∨((pozicia(barman)&&zamestnanec(Fero))∨((pozicia(casnik)&&zamestnanec(Fero))∨((pozicia(upratovacka)&&zamestnanec(Fero))∨((pozicia(vyhadzovac)&&zamestnanec(Fero))∨((pozicia(barman)&&zamestnanec(Gigi))∨((pozicia(casnik)&&zamestnanec(Gigi))∨(((pozicia(upratovacka)&&zamestnanec(Gigi))∨(pozicia(vyhadzovac)&&zamestnanec(Gigi))))))))))))))`))
+//       .toBe(`((pozicia(c:barman)∧zamestnanec(c:Ema))∨((pozicia(c:casnik)∧zamestnanec(c:Ema))∨((pozicia(c:upratovacka)∧zamestnanec(c:Ema))∨((pozicia(c:vyhadzovac)∧zamestnanec(c:Ema))∨((pozicia(c:barman)∧zamestnanec(c:Fero))∨((pozicia(c:casnik)∧zamestnanec(c:Fero))∨((pozicia(c:upratovacka)∧zamestnanec(c:Fero))∨((pozicia(c:vyhadzovac)∧zamestnanec(c:Fero))∨((pozicia(c:barman)∧zamestnanec(c:Gigi))∨((pozicia(c:casnik)∧zamestnanec(c:Gigi))∨((pozicia(c:upratovacka)∧zamestnanec(c:Gigi))∨(pozicia(c:vyhadzovac)∧zamestnanec(c:Gigi)))))))))))))`);
+//   });
+// })

@@ -53,6 +53,7 @@ describe('atoms', () => {
   });
 
   test('non-atoms', () => {
+    expect(() => parse('asdf')).toThrow(/formula but "a"/);
     expect(() => parse('x(x)')).toThrow(/formula but "x"/);
     expect(() => parse('c(x)')).toThrow(/formula but "c"/);
     expect(() => parse('f(x)')).toThrow(/formula but "f"/);
@@ -218,3 +219,28 @@ describe('nested strict formula parsing (256 randomly generated formulas)',
       });
     }
   })
+
+
+  describe('very deep, right-parenthesized clause', () => {
+    test('...', () => {
+      let deepIn = 'p(c)';
+      let deepOut = 'p(c:c)';
+      for (let i = 0; i < 12; i++) {
+        deepIn = `(p(c)∨${deepIn})`;
+        deepOut = `(p(c:c)∨${deepOut})`;
+      }
+      expect(parse(deepIn)).toBe(deepOut);
+    });
+  })
+
+describe('very deep, left-parenthesized clause', () => {
+  test('...', () => {
+    let deepIn = 'p(c)';
+    let deepOut = 'p(c:c)';
+    for (let i = 0; i < 12; i++) {
+      deepIn = `(${deepIn}∨p(c))`;
+      deepOut = `(${deepOut}∨p(c:c))`;
+    }
+    expect(parse(deepIn)).toBe(deepOut);
+  });
+})
