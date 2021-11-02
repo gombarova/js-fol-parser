@@ -1,10 +1,3 @@
-// Grammars of a few variations of first-order languages
-// and textual specifications of languages and structures
-//
-// Authors: Milan Cifra, Ján Kľuka
-// Unicode class and JavaScript identifier parsing rules taken from
-// https://github.com/pegjs/pegjs/blob/master/examples/javascript.pegjs
-
 {
     /* eslint-disable */
     const { startRule, language, factories } = options;
@@ -12,371 +5,77 @@
 }
 
 
-// ## FIRST-ORDER SYNTAX OVER A GIVEN LANGUAGE
-
-
-// ### Terms
-
-Term
-    = WS t:TermCases WS { return t }
-
-TermCases
-    "term"
-    = f:FunctionSymbol WS "(" ts:Terms ")"
-        { return factories.functionApplication(f, ts, ee) }
-    / c:ConstantSymbol
-        { return factories.constant(c, ee) }
-    / v:VariableSymbol
-        { return factories.variable(v, ee) }
-
-Terms
-    = t1:Term ts:("," ti:Term { return ti })*
-        { return [t1].concat(ts) }
-
-
-// ### Predicate atoms
-
-PredicateAtom
-    = p:PredicateSymbol WS "(" ts:Terms ")"
-        { return { predicate: p, arguments: ts } }
-
-
-// ### Quasi atoms
-
-QuasiAtom
-    = t1:Term eqNeq:EqNeqSymbol t2:Term
-        { return eqNeq(t1, t2, ee) }
-    / pa:PredicateAtom
-        { return factories.predicateAtom(pa.predicate, pa.arguments, ee) }
-    / p:PredicateSymbol
-        { return factories.predicateAtom(p, [], ee) }
-
-EqNeqSymbol
-    = EqualitySymbol
-        { return factories.equalityAtom }
-    / NonEqualitySymbol
-        {
-            return (t1, t2, ee) =>
-                factories.negation(
-                    factories.equalityAtom(t1, t2, ee),
-                    ee)
-        }
-
-
-// ### Formulas – strictly binary and fully parenthesized
-
-FormulaStrict
-    "formula"
-    = WS f:FormulaStrictCases WS { return f }
-
-FormulaStrictCases
-    = "(" left:FormulaStrict c:BinaryConnective right:FormulaStrict ")"
-        { return c(left, right, ee) }
-    / ExistsSymbol WS v:VariableSymbol f:FormulaStrict
-        { return factories.existentialQuant(v, f, ee) }
-    / ForallSymbol WS v:VariableSymbol f:FormulaStrict
-        { return factories.universalQuant(v, f, ee) }
-    / NegationSymbol f:FormulaStrict
-        { return factories.negation(f, ee) }
-    / f:QuasiAtom
-        { return f }
-    / "(" f:FormulaStrict ")"
-        { return f }
-
-BinaryConnective
-    "binary connective"
-    = ConjunctionSymbol
-        { return factories.conjunction }
-    / DisjunctionSymbol
-        { return factories.disjunction }
-    / ImplicationSymbol
-        { return factories.implication }
-    / EquivalenceSymbol
-        { return factories.equivalence }
-
-
-// ### Formulas with connectives precedence
-
-FormulaWithPrecedence
-    = WS f:ImplicativeFormula WS { return f }
-
-ImplicativeFormula
-    = left:DisjunctiveFormula WS
-        ImplicationSymbol WS right:ImplicativeFormula
-        { return factories.implication(left, right, ee) }
-    / EquivalenceFormula
-
-EquivalenceFormula
-    = left:DisjunctiveFormula
-            WS EquivalenceSymbol WS right:EquivalenceFormula
-        { return factories.equivalence(left, right, ee) }
-    / DisjunctiveFormula
-
-DisjunctiveFormula
-    = leftmost:ConjunctiveFormula
-        rights:(
-            WS DisjunctionSymbol WS right:ConjunctiveFormula
-                { return right }
-        )*
-        {
-            return [leftmost,...rights].reduce(
-                (disj, right) =>
-                    factories.disjunction(disj, right, ee)
-            )
-        }
-
-ConjunctiveFormula
-    = leftmost:UnaryFormula
-        rights:(
-            WS ConjunctionSymbol WS right:UnaryFormula
-                { return right }
-        )*
-        {
-            return [leftmost,...rights].reduce(
-                (conj, right) =>
-                    factories.conjunction(conj, right, ee)
-            )
-        }
-
-UnaryFormula
-    = NegationSymbol WS f:UnaryFormula
-        { return factories.negation(f, ee) }
-    / ExistsSymbol WS v:VariableSymbol WS f:UnaryFormula
-        { return factories.existentialQuant(v, f, ee) }
-    / ForallSymbol WS v:VariableSymbol WS f:UnaryFormula
-        { return factories.universalQuant(v, f, ee) }
-    / PrimaryFormula
-
-PrimaryFormula
-    = QuasiAtom
-    / "(" f:FormulaWithPrecedence ")"
-        { return f }
-
-
-// ### Literals and clauses
-
-Literal
-    = NegationSymbol WS pa:PredicateAtom
-        { return factories.literal(true, pa.predicate, pa.arguments, ee) }
-    / pa:PredicateAtom
-        { return factories.literal(false, pa.predicate, pa.arguments, ee) }
-
-Clause
-    = WS EmptyClause WS
-        { return factories.clause([], ee) }
-    / WS lits:ClauseLiterals WS
-        { return factories.clause(lits, ee) }
-
-ClauseLiterals
-    = leftmost:PrimaryClause
-        rights:(
-            WS (DisjunctionSymbol / ",") WS right:PrimaryClause
-                { return right }
-        )*
-        { return [leftmost,...rights].flat() }
-
-PrimaryClause
-    = lit:Literal
-        { return [lit] }
-    / "(" WS lits:ClauseLiterals WS ")"
-        { return lits }
-
-
-// ## LANGUAGE-BASED NON-LOGICAL SYMBOLS
-
-VariableSymbol
-    "variable symbol"
-    = $ (i:Identifier & { return language.isVariable(i) })
-
-ConstantSymbol
-    "individual constant symbol"
-    = $ (i:ConstantIdentifier & { return language.isConstant(i) })
-
-FunctionSymbol
-    "function symbol"
-    = $ (i:Identifier & { return language.isFunction(i) })
-
-PredicateSymbol
-    "predicate symbol"
-    = $ (i:Identifier & { return language.isPredicate(i) })
-
-
-// ## LOGICAL SYMBOLS
-
-EqualitySymbol
-    "equality symbol"
-    = "="
-
-ConjunctionSymbol
-    "conjunction symbol"
-    = "∧"
-    / "&&" // must come before &
-    / "&"
-    / "/\\"
-    / "\\land" ! IdentifierPart
-    / "\\wedge" ! IdentifierPart
-
-DisjunctionSymbol
-    "disjunction symbol"
-    = "∨"
-    / "||" // must come before |
-    / "|"
-    / "\\/"
-    / "\\lor" ! IdentifierPart
-    / "\\vee" ! IdentifierPart
-
-ImplicationSymbol
-    "implication symbol"
-    = "→" / "⇒" / "⟶" / "⟹" / "⊃"
-    / "->" / "=>" / "-->" / "==>"
-    / "\\limpl" ! IdentifierPart
-    / "\\implies" ! IdentifierPart
-    / "\\rightarrow" ! IdentifierPart
-    / "\\to" ! IdentifierPart
-
-EquivalenceSymbol
-    "equivalence symbol"
-    = "↔︎" / "⟷" / "⇔" / "⟺" / "≡"
-    / "<->" / "<-->" / "<=>" / "<==>" / "==="
-    / "\\lequiv" ! IdentifierPart
-    / "\\leftrightarrow" ! IdentifierPart
-    / "\\equivalent" ! IdentifierPart
-    / "\\equiv" ! IdentifierPart
-
-ExistsSymbol
-    "existential quantifier"
-    = "∃"
-    / "\\e" ( "x" "ists"? )? ! IdentifierPart
-    / "\\E" ! IdentifierPart
-
-ForallSymbol
-    "universal quantifier"
-    = "∀"
-    / "\\forall" ! IdentifierPart
-    / "\\all" ! IdentifierPart
-    / "\\a" ! IdentifierPart
-    / "\\A" ! IdentifierPart
-
-NegationSymbol
-    "negation symbol"
-    = "¬"
-    / "-" / "!" / "~"
-    / "\\neg" ! IdentifierPart
-    / "\\lnot" ! IdentifierPart
-
-NonEqualitySymbol
-    "non-equality symbol"
-    = "≠"
-    / "!=" / "<>" / "/="
-    / "\\neq" ! IdentifierPart
-
-EmptyClause
-    "empty clause symbol"
-    = "□" / "▫︎" / "◽︎" / "◻︎" / "⬜︎" / "▢" / "⊥"
-    / "[]" / "_|_"
-    / "\\square" ! IdentifierPart
-    / "\\Box"  ! IdentifierPart
-    / "\\qed" ! IdentifierPart
-
-
-// ## LANGUAGE SPECIFICATION
-
-Constants
-    = WS c1:ConstantIdentifier
-        cs:(WS "," WS ci:ConstantIdentifier {return ci})* WS
-        { return [c1].concat(cs) }
-
-Predicates
-    = WS p1:LanguagePredicate
-        ps:(WS "," WS pi:LanguagePredicate {return pi})* WS
-        { return [p1].concat(ps) }
-
-Functions
-    = WS f1:LanguageFunction
-        fs:(WS "," WS fi:LanguageFunction {return fi})* WS
-        { return [f1].concat(fs) }
-
-PredicateArity
-    "arity of the predicate symbol (non-negative integer)"
-    = Nat
-
-FunctionArity
-    "arity of the function symbol (positive integer)"
-    = a:Nat & { return a > 0 } { return a }
-
-Nat
-    = digits:[0-9]+ { return parseInt(digits, 10) }
-
-LanguagePredicate
-    "predicate identifier/non-negative arity"
-    = WS name:Identifier WS "/" WS arity:PredicateArity WS
-        { return {name: name, arity: arity} }
-
-LanguageFunction
-    "function identifier/positive arity"
-    = WS name:Identifier WS "/" WS arity:FunctionArity WS
-        { return {name: name, arity: arity} }
-
-
-// ## STRUCTURE SPECIFICATION
-
-Domain
-    = WS e1:DomainElement es:(WS "," WS ei:DomainElement {return ei})* WS
-        { return [e1].concat(es) }
-
-DomainElement
-    "domain element (any string not containing white space, comma, or parentheses)"
-    = $ [^,()\t\n\r\v\f\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+
-
-Tuples
-    = WS t1:Tuple ts:(WS "," WS ti:Tuple {return ti})* WS
-        { return [t1].concat(ts) }
-
-Tuple
-    "domain element or n-tuple of domain elements"
-    = "(" WS e1:DomainElement es:(WS "," WS ei:DomainElement {return ei})+
-        WS ")"
-        { return [e1].concat(es) }
-    / WS e:DomainElement WS
-        { return [e] }
-
-Valuation
-    = WS p1:ValuationPair ps:(WS "," WS pi:ValuationPair {return pi})* WS
-        { return [p1].concat(ps) }
-
-ValuationPair
-    = "(" WS v:VariableSymbol WS "," WS e:DomainElement WS ")"
-        { return [v, e] }
-    / v:VariableSymbol WS MapsTo WS e:DomainElement
-        { return [v, e] }
-
-
-// ## SUBSTITUTIONS
-
-
-// ### Substitution with an a-priori language
-
-Substitution
-    = WS p1:SubstitutionPair
-        ps:(WS "," WS pi:SubstitutionPair {return pi})* WS
-        { return [p1, ...ps] }
-
-SubstitutionPair
-    = "(" WS v:VariableSymbol WS "," WS t:Term WS ")"
-        { return [v, t] }
-    / v:VariableSymbol WS MapsTo WS t:Term
-        { return [v, t] }
-
-
-// ### Maps-to symbols
-
-MapsTo
-    "a maps-to symbol (\"->\", \"|->\", \"↦\", \"⟼\", or \"\\mapsto\")"
-    = "->"
-    / "|->"
-    / [\u21A6\u27FC]
-    / "\\mapsto" ! IdentifierPart
-
+tff
+    = WS "tff(" WS n:name "," WS r:formula_role "," WS f:tff_formula WS ")." WS
+        { return { name: n, role: r, formula: f }; }
+
+name
+    = i:Identifier
+        { return i; }
+
+formula_role
+    = "axiom"
+        { return "axiom"; }
+    / "type"
+        { return "type"; }
+
+tff_formula
+    = f:tff_logic_formula
+        { return f; }
+    / a:tff_atom_typing
+        { return a; }
+
+tff_atom_typing
+    = a:untyped_atom ":" tff_top_level_type
+        { return a; }
+
+untyped_atom
+    = c:([a-z] Identifier)
+        { return { constant: c }; }
+    / t:("$" Identifier)
+        { return { type: t }; }
+
+tff_top_level_type
+    = Identifier
+    / WS Identifier WS ">" WS Identifier WS
+
+tff_logic_formula
+    = tff_unitary_formula
+    / tff_unary_formula
+    / tff_binary_formula
+    / tff_defined_infix
+
+tff_unitary_formula
+    = tff_quantified_formula
+    / tff_atomic_formula
+    / tfx_unitary_formula
+
+tff_quantified_formula
+    = "!" WS "[" tff_variable_list "]" WS ":" WS tff_unit_formula
+    / "?" WS "[" tff_variable_list "]" WS ":" WS tff_unit_formula
+
+tff_variable_list
+    = v:tff_variable vars:(WS "," WS i:tff_variable { return i; })*
+        { return [v].concat(vars); }
+
+tff_variable
+    = v:([A-Z] Identifier)
+        { return factories.variable }
+
+tff_atomic_formula
+    =
+
+tfx_unitary_formula
+    =
+
+tff_unary_formula
+    =
+
+tff_binary_formula
+    =
+
+tff_defined_infix
+    =
 
 // ## WHITE SPACE
 
